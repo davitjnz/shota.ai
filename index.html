@@ -1,24 +1,28 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
+
     <head>
-            <meta charset="utf-8">
-      <title>შოთა</title>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.js"></script>
-      <script src="https://unpkg.com/ml5@0.1.1/dist/ml5.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/addons/p5.dom.min.js"></script>
+        <meta charset="utf-8">
+        <title>შოთა</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/p5.js"></script>
+        <script src="https://unpkg.com/ml5@0.1.1/dist/ml5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.6.1/addons/p5.dom.min.js"></script>
     </head>
     <link rel='stylesheet' href='./fonts/stylesheet.css' type='text/css' media='all' />
     <style>
-        *{    
-            font-family: 'dm_sabaregular'; 
+        * {
+            font-family: 'dm_sabaregular';
         }
-        body{
-            background:  -webkit-linear-gradient(135deg,#333333 0,#1d1d1d 100%);
+
+        body {
+            background: -webkit-linear-gradient(135deg, #333333 0, #1d1d1d 100%);
             -webkit-tap-highlight-color: transparent;
             overflow: hidden;
         }
-        input{
+
+        input {
             width: 70%;
             position: fixed;
             font-size: 52px;
@@ -30,6 +34,7 @@
             color: #9c9c9c;
             z-index: 2;
         }
+
         span#result {
             width: 70%;
             position: fixed;
@@ -43,101 +48,104 @@
             white-space: pre;
             z-index: 2;
         }
-        bg{
-            background-image: url('b.jpg');
-            background-repeat: no-repeat; 
-            position: absolute;
-    width: 100%;
-    height: 100%;
-    background-size: contain;
-    background-position: center;
-    z-index: 1;
 
-    opacity: .2;
-    background-size: cover;
-    top: 0;
-    left: 0;
+        bg {
+            background-image: url('b.jpg');
+            background-repeat: no-repeat;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-position: center;
+            z-index: 1;
+
+            opacity: .2;
+            background-size: cover;
+            top: 0;
+            left: 0;
         }
     </style>
-  <body>
+
+<body>
     <input />
     <span id="result"></span>
     <bg></bg>
     <script>
-    const res = document.getElementById('result');
-    const inp = document.getElementsByTagName('input')[0];
-    const charRNN = ml5.LSTMGenerator('./data_/', () => {});
-    const alphGeo = ["ა","ბ","გ","დ","ე","ვ","ზ","თ","ი","კ","ლ","მ","ნ","ო","პ","ჟ","რ","ს","ტ","უ","ფ","ქ","ღ","ყ","შ","ჩ","ც","ძ","წ","ჭ","ხ","ჯ","ჰ"," ",".",","];
-    const alphEng = ["a","b","g","d","e","v","z","T","i","k","l","m","n","o","p","J","r","s","t","u","f","q","R","y","S","C","c","Z","w","W","x","j","h"," ",".",","];
-    const sss = ["ა", "ე", "ი", "ო", "უ"];
-    let debounceTimer;
-    let currentGenId = 0;
-    let running = false;
+        const res = document.getElementById('result');
+        const inp = document.getElementsByTagName('input')[0];
+        const charRNN = ml5.LSTMGenerator('./data_/', () => { });
+        const alphGeo = ["ა", "ბ", "გ", "დ", "ე", "ვ", "ზ", "თ", "ი", "კ", "ლ", "მ", "ნ", "ო", "პ", "ჟ", "რ", "ს", "ტ", "უ", "ფ", "ქ", "ღ", "ყ", "შ", "ჩ", "ც", "ძ", "წ", "ჭ", "ხ", "ჯ", "ჰ", " ", ".", ","];
+        const alphEng = ["a", "b", "g", "d", "e", "v", "z", "T", "i", "k", "l", "m", "n", "o", "p", "J", "r", "s", "t", "u", "f", "q", "R", "y", "S", "C", "c", "Z", "w", "W", "x", "j", "h", " ", ".", ","];
+        const sss = ["ა", "ე", "ი", "ო", "უ"];
+        let debounceTimer;
+        let currentGenId = 0;
+        let running = false;
+        let val = '';
 
-    inp.onkeyup = () => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        if (!running && inp.value.length < 8) return;
-        running = true;
-        generate();
-    }, 500);
-    };
+        inp.onkeyup = () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (!running && inp.value.length < 8) return;
+                running = true;
+                generate();
+            }, 500);
+        };
 
-    const generate = () => {
-    const genId = ++currentGenId; // unique ID per generation
-    let val = '';
+        const generate = () => {
+            const genId = ++currentGenId; // unique ID per generation
 
-    for (let i = 0; i < inp.value.length; i++) {
-        val += alphGeo[alphEng.indexOf(inp.value[i])];
-    }
+            for (let i = 0; i < inp.value.length; i++) {
+                val += alphGeo[alphEng.indexOf(inp.value[i])];
+            }
 
-    // start generation
-    charRNN.generate({ seed: val, temperature: 0.5, length: 100 }, (err, aph) => {
-        // if a newer generation started, ignore this one
-        if (genId !== currentGenId) return;
-        readGenerated(err, aph);
-        running = false;
-    });
-    };
+            // start generation
+            charRNN.generate({ seed: val, temperature: 0.5, length: 100 }, (err, aph) => {
+                // if a newer generation started, ignore this one
+                if (genId !== currentGenId) return;
+                readGenerated(err, aph);
+                running = false;
+            });
+        };
 
 
-    const readGenerated = (err, aph) => {
-        aph = val + aph;
-        let aphVal = ''
-        let count = 0;
-        let match1 = false;
-        let match2 = false;
-        for(var i = 0; i < aph.length; i++){
-            if(sss.indexOf(aph[i]) !== -1) count++;
-            if(count == 16 && (aph[i] == ' ')) { match1 = true;}
-            //if(count == 32 && (aph[i] == ' ')) match2 = true;
-            if(!match1) {
-                aphVal += alphEng[alphGeo.indexOf(aph[i])];
+        const readGenerated = (err, aph) => {
+            aph = val + aph;
+            let aphVal = ''
+            let count = 0;
+            let match1 = false;
+            let match2 = false;
+            for (var i = 0; i < aph.length; i++) {
+                if (sss.indexOf(aph[i]) !== -1) count++;
+                if (count == 16 && (aph[i] == ' ')) { match1 = true; }
+                //if(count == 32 && (aph[i] == ' ')) match2 = true;
+                if (!match1) {
+                    aphVal += alphEng[alphGeo.indexOf(aph[i])];
+                }
+            }
+            if (match1) {
+                res.innerHTML = aphVal
+                running = false;
+            } else {
+                // res.innerHTML = aphVal 
+                setTimeout(() => generate(), 1000);
             }
         }
-        if(match1) {
-            res.innerHTML = aphVal 
-            running = false;
-        } else {
-            // res.innerHTML = aphVal 
-            setTimeout(() => generate(), 1000);
+
+        const drow = (res) => {
+
         }
-    }
-    
-    const drow = (res) => {
 
-    }
+        // 16 * 2.5 * 2
 
-// 16 * 2.5 * 2
+        // res.split('\n')
+        // სიბრძნე მეფეთა გულ-მაშინდოთა გამოსრული, შემოვიდეს, გავგზავნენ სამ დამიძვირდა. აწ იგი ვარდი დამეხსნე
+        // sibrZne mefeTa gul-maSindoTa gamosruli, Semovides, gavgzavnen sam damiZvirda. aw igi vardi damexsne
+        const word2Vec = ml5.word2vec('./word-vec.json', () => { });
 
-// res.split('\n')
-// სიბრძნე მეფეთა გულ-მაშინდოთა გამოსრული, შემოვიდეს, გავგზავნენ სამ დამიძვირდა. აწ იგი ვარდი დამეხსნე
-// sibrZne mefeTa gul-maSindoTa gamosruli, Semovides, gavgzavnen sam damiZvirda. aw igi vardi damexsne
-    const word2Vec = ml5.word2vec('./word-vec.json', () => {});
-    
-    
-    
-    
-   </script>
-  </body>
+
+
+
+    </script>
+</body>
+
 </html>
