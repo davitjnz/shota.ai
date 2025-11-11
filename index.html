@@ -70,21 +70,36 @@
     const alphGeo = ["ა","ბ","გ","დ","ე","ვ","ზ","თ","ი","კ","ლ","მ","ნ","ო","პ","ჟ","რ","ს","ტ","უ","ფ","ქ","ღ","ყ","შ","ჩ","ც","ძ","წ","ჭ","ხ","ჯ","ჰ"," ",".",","];
     const alphEng = ["a","b","g","d","e","v","z","T","i","k","l","m","n","o","p","J","r","s","t","u","f","q","R","y","S","C","c","Z","w","W","x","j","h"," ",".",","];
     const sss = ["ა", "ე", "ი", "ო", "უ"];
+    let debounceTimer;
+    let currentGenId = 0;
     let running = false;
+
     inp.onkeyup = () => {
-        if(!running && inp.value.length < 8) return;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        if (!running && inp.value.length < 8) return;
         running = true;
         generate();
-    }
-    let val = '';
+    }, 500);
+    };
+
     const generate = () => {
-        
-        val = '';
-        for(var i = 0; i < inp.value.length; i++){
-            val += alphGeo[alphEng.indexOf(inp.value[i])];
-        }
-        charRNN.generate({ seed: val, temperature: .5, length: 100 }, (err, aph) => readGenerated(err, aph));
+    const genId = ++currentGenId; // unique ID per generation
+    let val = '';
+
+    for (let i = 0; i < inp.value.length; i++) {
+        val += alphGeo[alphEng.indexOf(inp.value[i])];
     }
+
+    // start generation
+    charRNN.generate({ seed: val, temperature: 0.5, length: 100 }, (err, aph) => {
+        // if a newer generation started, ignore this one
+        if (genId !== currentGenId) return;
+        readGenerated(err, aph);
+        running = false;
+    });
+    };
+
 
     const readGenerated = (err, aph) => {
         aph = val + aph;
